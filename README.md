@@ -9,11 +9,8 @@ CloudAudit connects to your AWS account, audits it for the most dangerous securi
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 ## Screenshots
-
-
-<img width="1071" height="108" alt="summary" src="https://github.com/user-attachments/assets/1700cdb6-4af1-4107-be28-0f6274238184" />
-
-<img width="1099" height="911" alt="report" src="https://github.com/user-attachments/assets/9504d4bd-d6d1-46f5-a7d0-968befb52605" />
+<img width="1095" height="918" alt="Screenshot 2026-05-07 at 10 56 03 PM" src="https://github.com/user-attachments/assets/15c1424d-f516-4e11-8860-7dab948a25fa" />
+<img width="1545" height="790" alt="Screenshot 2026-05-07 at 10 55 25 PM" src="https://github.com/user-attachments/assets/3fcb3a9d-cd57-46c2-aeef-1448f96529a7" />
 
 
 ---
