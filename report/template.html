@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudAudit Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:        #080b12;
+            --surface:   #0d1117;
+            --surface2:  #111827;
+            --border:    #1f2937;
+            --border2:   #374151;
+            --text:      #f1f5f9;
+            --muted:     #6b7280;
+            --subtle:    #9ca3af;
+
+            --critical:  #f87171;
+            --critical-bg: rgba(248,113,113,0.08);
+            --critical-border: rgba(248,113,113,0.25);
+
+            --high:      #fb923c;
+            --high-bg:   rgba(251,146,60,0.08);
+            --high-border: rgba(251,146,60,0.25);
+
+            --medium:    #60a5fa;
+            --medium-bg: rgba(96,165,250,0.08);
+            --medium-border: rgba(96,165,250,0.25);
+
+            --low:       #34d399;
+            --low-bg:    rgba(52,211,153,0.08);
+            --low-border: rgba(52,211,153,0.25);
+
+            --accent:    #38bdf8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ── SIDEBAR ── */
+        .layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-logo {
+            padding: 1.5rem 1.25rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo .wordmark {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-logo .tagline {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-top: 2px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-meta {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .meta-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .meta-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .meta-value {
+            font-size: 0.78rem;
+            color: var(--subtle);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .sidebar-scores {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .score-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .score-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .score-label::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+        }
+
+        .score-label.critical::before { background: var(--critical); }
+        .score-label.high::before     { background: var(--high); }
+        .score-label.medium::before   { background: var(--medium); }
+        .score-label.low::before      { background: var(--low); }
+
+        .score-count {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .score-count.critical { color: var(--critical); }
+        .score-count.high     { color: var(--high); }
+        .score-count.medium   { color: var(--medium); }
+        .score-count.low      { color: var(--low); }
+
+        .score-bar-track {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 2px;
+            overflow: hidden;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 1s ease;
+        }
+
+        .score-bar-fill.critical { background: var(--critical); }
+        .score-bar-fill.high     { background: var(--high); }
+        .score-bar-fill.medium   { background: var(--medium); }
+        .score-bar-fill.low      { background: var(--low); }
+
+        .sidebar-nav {
+            padding: 0.75rem 0;
+            flex: 1;
+        }
+
+        .nav-section-label {
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            padding: 0.5rem 1.25rem 0.25rem;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.45rem 1.25rem;
+            font-size: 0.8rem;
+            color: var(--subtle);
+            text-decoration: none;
+            transition: all 0.15s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: var(--surface2);
+            color: var(--text);
+        }
+
+        .nav-item .nav-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+
+        .nav-badge.critical { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); }
+        .nav-badge.high     { background: var(--high-bg);     color: var(--high);     border: 1px solid var(--high-border); }
+        .nav-badge.medium   { background: var(--medium-bg);   color: var(--medium);   border: 1px solid var(--medium-border); }
+        .nav-badge.low      { background: var(--low-bg);      color: var(--low);      border: 1px solid var(--low-border); }
+        .nav-badge.ok       { background: rgba(52,211,153,0.08); color: var(--low); border: 1px solid rgba(52,211,153,0.2); }
+
+        .sidebar-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.65rem;
+            color: var(--muted);
+            font-family: 'Space Mono', monospace;
+        }
+
+        /* ── MAIN ── */
+        .main {
+            overflow-y: auto;
+            background: var(--bg);
+        }
+
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.875rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .topbar-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .risk-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .risk-critical { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); }
+        .risk-high     { background: var(--high-bg);     color: var(--high);     border: 1px solid var(--high-border); }
+        .risk-medium   { background: var(--medium-bg);   color: var(--medium);   border: 1px solid var(--medium-border); }
+        .risk-low      { background: var(--low-bg);      color: var(--low);      border: 1px solid var(--low-border); }
+
+        .content {
+            padding: 1.5rem 2rem;
+        }
+
+        /* ── STAT CARDS ── */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+        }
+
+        .stat-card.critical::before { background: var(--critical); }
+        .stat-card.high::before     { background: var(--high); }
+        .stat-card.medium::before   { background: var(--medium); }
+        .stat-card.low::before      { background: var(--low); }
+
+        .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            font-family: 'Space Mono', monospace;
+            margin-bottom: 0.4rem;
+        }
+
+        .stat-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-card.critical .stat-number { color: var(--critical); }
+        .stat-card.high .stat-number     { color: var(--high); }
+        .stat-card.medium .stat-number   { color: var(--medium); }
+        .stat-card.low .stat-number      { color: var(--low); }
+
+        .stat-sub {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-top: 0.3rem;
+        }
+
+        /* ── SECTION ── */
+        .section {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .section-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .section-dot.critical { background: var(--critical); }
+        .section-dot.high     { background: var(--high); }
+        .section-dot.medium   { background: var(--medium); }
+        .section-dot.low      { background: var(--low); }
+
+        .section-title-text {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .section-title-text.critical { color: var(--critical); }
+        .section-title-text.high     { color: var(--high); }
+        .section-title-text.medium   { color: var(--medium); }
+        .section-title-text.low      { color: var(--low); }
+
+        .section-count {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--muted);
+            margin-left: auto;
+        }
+
+        /* ── FINDING CARD ── */
+        .finding-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            transition: border-color 0.15s;
+        }
+
+        .finding-card:hover { border-color: var(--border2); }
+
+        .finding-card.Critical { border-left: 3px solid var(--critical); }
+        .finding-card.High     { border-left: 3px solid var(--high); }
+        .finding-card.Medium   { border-left: 3px solid var(--medium); }
+        .finding-card.Low      { border-left: 3px solid var(--low); }
+
+        .finding-top {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+        }
+
+        .sev-pill {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 7px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+
+        .sev-pill.Critical { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); }
+        .sev-pill.High     { background: var(--high-bg);     color: var(--high);     border: 1px solid var(--high-border); }
+        .sev-pill.Medium   { background: var(--medium-bg);   color: var(--medium);   border: 1px solid var(--medium-border); }
+        .sev-pill.Low      { background: var(--low-bg);      color: var(--low);      border: 1px solid var(--low-border); }
+
+        .finding-title-text {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .finding-service-tag {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.62rem;
+            color: var(--muted);
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .finding-chevron {
+            color: var(--muted);
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .finding-card.open .finding-chevron { transform: rotate(90deg); }
+
+        .finding-body {
+            display: none;
+            border-top: 1px solid var(--border);
+            padding: 0.875rem 1rem;
+            background: var(--surface2);
+        }
+
+        .finding-card.open .finding-body { display: block; }
+
+        .finding-grid {
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            gap: 0.5rem 1rem;
+        }
+
+        .fg-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            font-family: 'Space Mono', monospace;
+            padding-top: 1px;
+        }
+
+        .fg-value {
+            font-size: 0.8rem;
+            color: var(--subtle);
+            line-height: 1.5;
+        }
+
+        .fg-value.resource {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--accent);
+        }
+
+        .fg-value.fix {
+            color: var(--low);
+        }
+
+        .no-findings-msg {
+            font-size: 0.78rem;
+            color: var(--muted);
+            font-style: italic;
+            padding: 0.5rem 0;
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card { animation: fadeUp 0.4s ease both; }
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        .stat-card:nth-child(4) { animation-delay: 0.2s; }
+
+        .finding-card { animation: fadeUp 0.3s ease both; }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="wordmark">☁ CloudAudit</div>
+            <div class="tagline">AWS Security Scanner</div>
+        </div>
+
+        <div class="sidebar-meta">
+            <div class="meta-row">
+                <div class="meta-item">
+                    <span class="meta-label">Profile</span>
+                    <span class="meta-value">{{ profile }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Region</span>
+                    <span class="meta-value">{{ region }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Generated</span>
+                    <span class="meta-value">{{ generated_at }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-scores">
+            {% set total_nonzero = (critical|length) + (high|length) + (medium|length) + (low|length) %}
+            {% for sev, items, cls in [
+                ('Critical', critical, 'critical'),
+                ('High', high, 'high'),
+                ('Medium', medium, 'medium'),
+                ('Low', low, 'low')
+            ] %}
+            <div>
+                <div class="score-row">
+                    <span class="score-label {{ cls }}">{{ sev }}</span>
+                    <span class="score-count {{ cls }}">{{ items|length }}</span>
+                </div>
+                <div class="score-bar-track">
+                    <div class="score-bar-fill {{ cls }}"
+                         style="width: {{ ((items|length / total_nonzero * 100) if total_nonzero > 0 else 0)|int }}%">
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Modules</div>
+            {% set services = all_findings | map(attribute='service') | list | unique | list %}
+            {% for service in ['S3', 'IAM', 'EC2', 'CloudTrail', 'RDS', 'GuardDuty'] %}
+                {% set svc_findings = all_findings | selectattr('service', 'equalto', service) | list %}
+                {% set has_critical = svc_findings | selectattr('severity', 'equalto', 'Critical') | list | length > 0 %}
+                {% set has_high = svc_findings | selectattr('severity', 'equalto', 'High') | list | length > 0 %}
+                {% set has_medium = svc_findings | selectattr('severity', 'equalto', 'Medium') | list | length > 0 %}
+                {% set has_low = svc_findings | selectattr('severity', 'equalto', 'Low') | list | length > 0 %}
+                <div class="nav-item">
+                    <span>{{ service }}</span>
+                    {% if svc_findings | length == 0 %}
+                        <span class="nav-badge ok">✓</span>
+                    {% elif has_critical %}
+                        <span class="nav-badge critical">{{ svc_findings | length }}</span>
+                    {% elif has_high %}
+                        <span class="nav-badge high">{{ svc_findings | length }}</span>
+                    {% elif has_medium %}
+                        <span class="nav-badge medium">{{ svc_findings | length }}</span>
+                    {% else %}
+                        <span class="nav-badge low">{{ svc_findings | length }}</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </nav>
+
+        <div class="sidebar-footer">
+            {{ total }} total findings
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="topbar">
+            <span class="topbar-title">Security Audit Report</span>
+            <div class="topbar-right">
+                {% if critical|length > 0 %}
+                    <span class="risk-badge risk-critical">⚠ Critical Risk</span>
+                {% elif high|length > 0 %}
+                    <span class="risk-badge risk-high">High Risk</span>
+                {% elif medium|length > 0 %}
+                    <span class="risk-badge risk-medium">Medium Risk</span>
+                {% else %}
+                    <span class="risk-badge risk-low">Low Risk</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="content">
+
+            <!-- STAT CARDS -->
+            <div class="stat-grid">
+                <div class="stat-card critical">
+                    <div class="stat-label">Critical</div>
+                    <div class="stat-number">{{ critical|length }}</div>
+                    <div class="stat-sub">Immediate action required</div>
+                </div>
+                <div class="stat-card high">
+                    <div class="stat-label">High</div>
+                    <div class="stat-number">{{ high|length }}</div>
+                    <div class="stat-sub">Remediate within 24h</div>
+                </div>
+                <div class="stat-card medium">
+                    <div class="stat-label">Medium</div>
+                    <div class="stat-number">{{ medium|length }}</div>
+                    <div class="stat-sub">Remediate within 7 days</div>
+                </div>
+                <div class="stat-card low">
+                    <div class="stat-label">Low</div>
+                    <div class="stat-number">{{ low|length }}</div>
+                    <div class="stat-sub">Best practice gaps</div>
+                </div>
+            </div>
+
+            <!-- FINDINGS BY SEVERITY -->
+            {% for sev, cls, items in [
+                ('Critical', 'critical', critical),
+                ('High', 'high', high),
+                ('Medium', 'medium', medium),
+                ('Low', 'low', low)
+            ] %}
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-dot {{ cls }}"></div>
+                    <span class="section-title-text {{ cls }}">{{ sev }} Findings</span>
+                    <span class="section-count">{{ items|length }} issue{% if items|length != 1 %}s{% endif %}</span>
+                </div>
+
+                {% if items %}
+                    {% for f in items %}
+                    <div class="finding-card {{ f.severity }}" onclick="toggle(this)">
+                        <div class="finding-top">
+                            <span class="sev-pill {{ f.severity }}">{{ f.severity }}</span>
+                            <span class="finding-title-text">{{ f.title }}</span>
+                            <span class="finding-service-tag">{{ f.service }}</span>
+                            <span class="finding-chevron">▶</span>
+                        </div>
+                        <div class="finding-body">
+                            <div class="finding-grid">
+                                <div class="fg-label">Resource</div>
+                                <div class="fg-value resource">{{ f.resource }}</div>
+                                <div class="fg-label">Issue</div>
+                                <div class="fg-value">{{ f.description }}</div>
+                                <div class="fg-label">Remediation</div>
+                                <div class="fg-value fix">{{ f.remediation }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-findings-msg">No {{ sev|lower }} findings — good.</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+        </div>
+    </main>
+
+</div>
+
+<script>
+    function toggle(card) {
+        card.classList.toggle('open');
+    }
+
+    // Auto-open critical findings
+    document.querySelectorAll('.finding-card.Critical').forEach(c => c.classList.add('open'));
+</script>
+
+</body>
+</html>

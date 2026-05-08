@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+.env
+cloudaudit_report.html
+.DS_Store
