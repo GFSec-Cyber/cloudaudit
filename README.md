@@ -12,10 +12,9 @@ CloudAudit connects to your AWS account, audits it for the most dangerous securi
 
 <img width="700" height="554" alt="cli" src="https://github.com/user-attachments/assets/50087f3f-0826-4cde-8e37-d64fa571b39c" />
 
-<img width="1099" height="911" alt="report" src="https://github.com/user-attachments/assets/9504d4bd-d6d1-46f5-a7d0-968befb52605" />
-
 <img width="1071" height="108" alt="summary" src="https://github.com/user-attachments/assets/1700cdb6-4af1-4107-be28-0f6274238184" />
 
+<img width="1099" height="911" alt="report" src="https://github.com/user-attachments/assets/9504d4bd-d6d1-46f5-a7d0-968befb52605" />
 
 
 ---
