@@ -8,6 +8,12 @@ CloudAudit connects to your AWS account, audits it for the most dangerous securi
 ![AWS](https://img.shields.io/badge/AWS-Boto3-orange?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
+## Screenshots
+
+![CLI Output](screenshots/cli.png)
+
+![HTML Report](screenshots/report.png)
+
 ---
 
 ## What It Audits
